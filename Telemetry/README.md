@@ -1,50 +1,126 @@
-# Welcome to your Expo app 👋
+# BLE with react native
+- [[https://expo.dev/blog/how-to-build-a-bluetooth-low-energy-powered-expo-app]]
+  - Cet article explique comment faire fonctionner le bluetooth avec expo
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+## Solution A
+- [[https://github.com/dotintent/react-native-ble-plx]]
+- [[https://medium.com/@akashpoovaragavan/connect-ble-devices-with-react-native-ble-plx-89f0dc907d8a]]
 
-## Get started
-
-1. Install dependencies
-
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-    npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+```
+npx expo install react-native-ble-plx
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Ajouter les droits dans AndroidManifest.xml (?)
 
-## Learn more
+```xml
+<!-- Bluetooth -->
+<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" /> <!-- Pas besoin ? -->
+<uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+Hook for location ready
+```js
+import { useEffect } from "react"
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+useEffect(() => {
+   let locationSubscription: EmitterSubscription | null = null
 
-## Join the community
+   const addLocationListener = async () => {
+      try {
+         const subscription = await SystemSetting.addLocationListener(data => {
+            console.log("Location: ", data)
+            setIsLocationOn(data)
+         })
+         locationSubscription = subscription
+      } catch (error) {
+         console.error("Error adding location listener:", error)
+      }
+   }
+   addLocationListener()
 
-Join our community of developers creating universal apps.
+   const stopLocationListener = () => {
+      if (locationSubscription) {
+         console.log("Listener stopped")
+         locationSubscription.remove()
+         locationSubscription = null
+      }
+   }
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+   return () => {
+      stopLocationListener()
+   }
+}, [isLocationOn])
+```
+
+Hook for BLE ready
+```js
+import { useEffect } from "react"
+import { BleManager } from "react-native-ble-plx"
+
+export const manager = new BleManager() //1 seule instance autorisée, attention à ne pas recréer à chaque render
+
+useEffect(() => {
+   const stateChangeListener = manager.onStateChange(state => {
+      console.log("onStateChange: ", state)
+
+      if (state === State.PoweredOn) scan()
+   })
+
+   return () => {
+      stateChangeListener?.remove()
+   }
+}, [manager])
+```
+
+```js
+function scan() {
+  manager.startDeviceScan(null, null, (error, device) => {
+    if (error) return
+
+    // Check if it is a device, you are looking for based on advertisement data
+    // or other criteria.
+    if (device.name === "TI BLE Sensor Tag" || device.name === "SensorTag") {
+      connect()
+      manager.stopDeviceScan()
+    }
+  })
+}
+```
+
+```json
+{
+  "_manager": {
+    "_activePromises": {},
+    "_activeSubscriptions": {
+      "1": [Object]
+    },
+    "_eventEmitter": {
+      "_nativeModule": [Object]
+    },
+    "_scanEventSubscription": {
+      "remove": [Function remove]
+    },
+    "_uniqueId": 2
+  },
+  "id": "CE:C1:6A:8F:3B:E8",
+  "isConnectable": true,
+  "localName": "RaceBox Mini S 2231800501",
+  "manufacturerData": null,
+  "mtu": 23,
+  "name": "RaceBox Mini S 2231800501",
+  "overflowServiceUUIDs": null,
+  "rawScanRecord": "AgEGGglSYWNlQm94IE1pbmkgUyAyMjMxODAwNTAxEQeeytwkDuWp4JPzo7UBAEBuAAAAAAAAAAAAAAAAAAA=",
+  "rssi": -73,
+  "serviceData": null,
+  "serviceUUIDs": ["6e400001-b5a3-f393-e0a9-e50e24dcca9e"],
+  "solicitedServiceUUIDs": null,
+  "txPowerLevel": null
+}
+```
+
+## Solution B
+- [[https://github.com/innoveit/react-native-ble-manager]]
+- [[https://medium.com/@varunkukade999/part-1-bluetooth-low-energy-ble-in-react-native-694758908dc2]]
+  - react-native-android-location-enabler
+  - react-native-permissions

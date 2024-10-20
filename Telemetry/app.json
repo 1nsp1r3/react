@@ -19,7 +19,8 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "org.inspir3.telemetry"
     },
     "web": {
       "bundler": "metro",
@@ -27,10 +28,16 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
-      "expo-router"
+      "expo-router",
+      "react-native-ble-plx",
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "9f96fb4b-5bbf-42e5-903e-ce4d9cd0e9f3"
+      }
     }
   }
 }
