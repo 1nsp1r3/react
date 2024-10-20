@@ -1,0 +1,6 @@
+# Specific for react apps
+node_modules/
+.expo/
+expo-env.d.ts
+
+# Perso
