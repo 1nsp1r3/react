@@ -1,19 +1,22 @@
-import {StyleSheet, Text} from "react-native"
+import {View, StyleSheet, Text} from "react-native"
+import FontAwesome              from "@expo/vector-icons/FontAwesome5"
 
-type Props = {
-  label: string,
-  value: string,
-  unit: string,
-}
-
-export default function TextData({ label, value, unit }: Props) {
+export default function TextData({ icon, value, unit }) {
   return (
-    <Text style={styles.text}>{label}: {value} {unit}</Text>
+    <View style={styles.container}>
+      <FontAwesome name={icon} style={styles.text} />
+      <Text style={styles.text}>{value} {unit}</Text>
+    </View>
   )
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
   text: {
+    marginLeft: 10,
     color: "#F0F0F0",
     fontSize: 30,
   },
